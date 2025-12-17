@@ -1,0 +1,737 @@
+import React, { useState, useMemo } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter, Cell, LineChart, Line, ComposedChart, Area } from 'recharts';
+
+// Aggregated data by Vehicle Age Range and Mileage Range
+const rawData = [
+  { vehicle_age_range: "0 3 Years", mileage_range: "0-50K", inspection_count: 2064, avg_topics_completed: 54.0, avg_issues_found: 4.56, avg_maintenance_conditions: 2.69, avg_repair_conditions: 1.95, avg_images: 29.24, avg_edited_images: 0.73, rate_topic_completion: 0.9999, rate_edited_images: 0.0251, rate_recommendations_with_image: 0.7794 },
+  { vehicle_age_range: "0 3 Years", mileage_range: "50K-100K", inspection_count: 520, avg_topics_completed: 54.0, avg_issues_found: 8.12, avg_maintenance_conditions: 5.42, avg_repair_conditions: 4.03, avg_images: 32.97, avg_edited_images: 0.81, rate_topic_completion: 0.9999, rate_edited_images: 0.0246, rate_recommendations_with_image: 0.7791 },
+  { vehicle_age_range: "0 3 Years", mileage_range: "100K-150K", inspection_count: 48, avg_topics_completed: 54.0, avg_issues_found: 10.9, avg_maintenance_conditions: 7.06, avg_repair_conditions: 6.25, avg_images: 35.38, avg_edited_images: 0.06, rate_topic_completion: 1.0, rate_edited_images: 0.0018, rate_recommendations_with_image: 0.744 },
+  { vehicle_age_range: "0 3 Years", mileage_range: "150K+", inspection_count: 16, avg_topics_completed: 54.0, avg_issues_found: 11.69, avg_maintenance_conditions: 7.62, avg_repair_conditions: 6.62, avg_images: 38.19, avg_edited_images: 0.19, rate_topic_completion: 1.0, rate_edited_images: 0.0049, rate_recommendations_with_image: 0.7526 },
+  { vehicle_age_range: "4 6 Years", mileage_range: "0-50K", inspection_count: 1111, avg_topics_completed: 53.99, avg_issues_found: 6.86, avg_maintenance_conditions: 4.19, avg_repair_conditions: 3.33, avg_images: 32.38, avg_edited_images: 0.85, rate_topic_completion: 0.9997, rate_edited_images: 0.0263, rate_recommendations_with_image: 0.7857 },
+  { vehicle_age_range: "4 6 Years", mileage_range: "50K-100K", inspection_count: 2163, avg_topics_completed: 53.99, avg_issues_found: 9.29, avg_maintenance_conditions: 5.79, avg_repair_conditions: 5.04, avg_images: 33.6, avg_edited_images: 1.32, rate_topic_completion: 0.9999, rate_edited_images: 0.0392, rate_recommendations_with_image: 0.7917 },
+  { vehicle_age_range: "4 6 Years", mileage_range: "100K-150K", inspection_count: 657, avg_topics_completed: 53.99, avg_issues_found: 11.09, avg_maintenance_conditions: 6.1, avg_repair_conditions: 6.91, avg_images: 33.7, avg_edited_images: 1.67, rate_topic_completion: 0.9999, rate_edited_images: 0.0495, rate_recommendations_with_image: 0.7894 },
+  { vehicle_age_range: "4 6 Years", mileage_range: "150K+", inspection_count: 107, avg_topics_completed: 53.99, avg_issues_found: 10.03, avg_maintenance_conditions: 5.29, avg_repair_conditions: 6.79, avg_images: 31.08, avg_edited_images: 1.36, rate_topic_completion: 0.9998, rate_edited_images: 0.0439, rate_recommendations_with_image: 0.7562 },
+  { vehicle_age_range: "7 10 Years", mileage_range: "0-50K", inspection_count: 561, avg_topics_completed: 54.0, avg_issues_found: 7.63, avg_maintenance_conditions: 4.5, avg_repair_conditions: 4.21, avg_images: 31.35, avg_edited_images: 1.36, rate_topic_completion: 1.0, rate_edited_images: 0.0434, rate_recommendations_with_image: 0.8002 },
+  { vehicle_age_range: "7 10 Years", mileage_range: "50K-100K", inspection_count: 2524, avg_topics_completed: 53.98, avg_issues_found: 10.08, avg_maintenance_conditions: 5.88, avg_repair_conditions: 5.93, avg_images: 33.72, avg_edited_images: 1.33, rate_topic_completion: 0.9997, rate_edited_images: 0.0396, rate_recommendations_with_image: 0.8002 },
+  { vehicle_age_range: "7 10 Years", mileage_range: "100K-150K", inspection_count: 2431, avg_topics_completed: 53.99, avg_issues_found: 11.58, avg_maintenance_conditions: 6.44, avg_repair_conditions: 7.59, avg_images: 35.56, avg_edited_images: 1.53, rate_topic_completion: 0.9999, rate_edited_images: 0.0431, rate_recommendations_with_image: 0.7985 },
+  { vehicle_age_range: "7 10 Years", mileage_range: "150K+", inspection_count: 974, avg_topics_completed: 53.98, avg_issues_found: 11.8, avg_maintenance_conditions: 6.11, avg_repair_conditions: 8.03, avg_images: 34.42, avg_edited_images: 1.62, rate_topic_completion: 0.9998, rate_edited_images: 0.047, rate_recommendations_with_image: 0.7972 },
+  { vehicle_age_range: "10 Years", mileage_range: "0-50K", inspection_count: 787, avg_topics_completed: 53.99, avg_issues_found: 7.55, avg_maintenance_conditions: 3.92, avg_repair_conditions: 5.0, avg_images: 29.01, avg_edited_images: 0.85, rate_topic_completion: 0.9999, rate_edited_images: 0.0294, rate_recommendations_with_image: 0.7988 },
+  { vehicle_age_range: "10 Years", mileage_range: "50K-100K", inspection_count: 1529, avg_topics_completed: 53.98, avg_issues_found: 10.48, avg_maintenance_conditions: 5.67, avg_repair_conditions: 6.55, avg_images: 33.17, avg_edited_images: 1.54, rate_topic_completion: 0.9998, rate_edited_images: 0.0466, rate_recommendations_with_image: 0.8053 },
+  { vehicle_age_range: "10 Years", mileage_range: "100K-150K", inspection_count: 3323, avg_topics_completed: 53.98, avg_issues_found: 12.12, avg_maintenance_conditions: 6.32, avg_repair_conditions: 8.38, avg_images: 34.85, avg_edited_images: 1.67, rate_topic_completion: 0.9997, rate_edited_images: 0.0479, rate_recommendations_with_image: 0.8046 },
+  { vehicle_age_range: "10 Years", mileage_range: "150K+", inspection_count: 4184, avg_topics_completed: 53.97, avg_issues_found: 13.17, avg_maintenance_conditions: 6.4, avg_repair_conditions: 9.61, avg_images: 36.03, avg_edited_images: 1.66, rate_topic_completion: 0.9996, rate_edited_images: 0.0461, rate_recommendations_with_image: 0.8057 }
+];
+
+const ageOrder = ["0 3 Years", "4 6 Years", "7 10 Years", "10 Years"];
+const mileageOrder = ["0-50K", "50K-100K", "100K-150K", "150K+"];
+
+const COLORS = {
+  primary: '#3b82f6',
+  secondary: '#10b981',
+  warning: '#f59e0b',
+  danger: '#ef4444',
+  purple: '#8b5cf6',
+  pink: '#ec4899',
+  teal: '#14b8a6',
+  gray: '#6b7280'
+};
+
+const MetricCard = ({ title, value, subtitle, trend, color = 'primary' }) => (
+  <div className="bg-white rounded-lg shadow p-4 border-l-4" style={{ borderLeftColor: COLORS[color] }}>
+    <div className="text-sm font-medium text-gray-500">{title}</div>
+    <div className="text-2xl font-bold mt-1" style={{ color: COLORS[color] }}>{value}</div>
+    {subtitle && <div className="text-xs text-gray-400 mt-1">{subtitle}</div>}
+    {trend && <div className={`text-xs mt-1 ${trend > 0 ? 'text-green-500' : 'text-red-500'}`}>{trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%</div>}
+  </div>
+);
+
+const Tabs = ({ tabs, activeTab, setActiveTab }) => (
+  <div className="flex border-b border-gray-200 mb-6">
+    {tabs.map(tab => (
+      <button
+        key={tab.id}
+        onClick={() => setActiveTab(tab.id)}
+        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+          activeTab === tab.id 
+            ? 'border-blue-500 text-blue-600' 
+            : 'border-transparent text-gray-500 hover:text-gray-700'
+        }`}
+      >
+        {tab.label}
+      </button>
+    ))}
+  </div>
+);
+
+// Data Explorer Component
+const DataExplorer = ({ data }) => {
+  const [groupBy, setGroupBy] = useState('both');
+  const [selectedAge, setSelectedAge] = useState('all');
+  const [selectedMileage, setSelectedMileage] = useState('all');
+  const [metric, setMetric] = useState('avg_issues_found');
+
+  const metricOptions = [
+    { value: 'avg_issues_found', label: 'Avg Issues Found', color: 'danger' },
+    { value: 'avg_maintenance_conditions', label: 'Avg Maintenance Conditions', color: 'warning' },
+    { value: 'avg_repair_conditions', label: 'Avg Repair Conditions', color: 'danger' },
+    { value: 'avg_images', label: 'Avg Images', color: 'primary' },
+    { value: 'avg_edited_images', label: 'Avg Edited Images', color: 'secondary' },
+    { value: 'rate_recommendations_with_image', label: 'Recommendations w/ Image Rate', color: 'purple' },
+    { value: 'rate_edited_images', label: 'Edited Image Rate', color: 'teal' }
+  ];
+
+  const filteredData = useMemo(() => {
+    let result = data;
+    if (selectedAge !== 'all') {
+      result = result.filter(d => d.vehicle_age_range === selectedAge);
+    }
+    if (selectedMileage !== 'all') {
+      result = result.filter(d => d.mileage_range === selectedMileage);
+    }
+    return result;
+  }, [data, selectedAge, selectedMileage]);
+
+  const aggregatedData = useMemo(() => {
+    if (groupBy === 'age') {
+      return ageOrder.map(age => {
+        const items = filteredData.filter(d => d.vehicle_age_range === age);
+        const totalInspections = items.reduce((sum, d) => sum + d.inspection_count, 0);
+        if (totalInspections === 0) return null;
+        return {
+          name: age,
+          inspection_count: totalInspections,
+          ...metricOptions.reduce((acc, m) => ({
+            ...acc,
+            [m.value]: items.reduce((sum, d) => sum + d[m.value] * d.inspection_count, 0) / totalInspections
+          }), {})
+        };
+      }).filter(Boolean);
+    } else if (groupBy === 'mileage') {
+      return mileageOrder.map(mileage => {
+        const items = filteredData.filter(d => d.mileage_range === mileage);
+        const totalInspections = items.reduce((sum, d) => sum + d.inspection_count, 0);
+        if (totalInspections === 0) return null;
+        return {
+          name: mileage,
+          inspection_count: totalInspections,
+          ...metricOptions.reduce((acc, m) => ({
+            ...acc,
+            [m.value]: items.reduce((sum, d) => sum + d[m.value] * d.inspection_count, 0) / totalInspections
+          }), {})
+        };
+      }).filter(Boolean);
+    } else {
+      return filteredData.map(d => ({
+        name: `${d.vehicle_age_range} / ${d.mileage_range}`,
+        ...d
+      })).sort((a, b) => {
+        const ageA = ageOrder.indexOf(a.vehicle_age_range);
+        const ageB = ageOrder.indexOf(b.vehicle_age_range);
+        if (ageA !== ageB) return ageA - ageB;
+        return mileageOrder.indexOf(a.mileage_range) - mileageOrder.indexOf(b.mileage_range);
+      });
+    }
+  }, [filteredData, groupBy]);
+
+  const selectedMetric = metricOptions.find(m => m.value === metric);
+  const totalInspections = filteredData.reduce((sum, d) => sum + d.inspection_count, 0);
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-blue-800 text-sm">
+          <strong>📊 Data Explorer:</strong> Filter and group the data to understand inspection patterns across vehicle segments. 
+          This data represents <strong>{totalInspections.toLocaleString()}</strong> inspections from Ramsey shops.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Group By</label>
+          <select 
+            value={groupBy} 
+            onChange={(e) => setGroupBy(e.target.value)}
+            className="w-full border rounded-md px-3 py-2 text-sm"
+          >
+            <option value="both">Age + Mileage</option>
+            <option value="age">Vehicle Age Only</option>
+            <option value="mileage">Mileage Only</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Age Filter</label>
+          <select 
+            value={selectedAge} 
+            onChange={(e) => setSelectedAge(e.target.value)}
+            className="w-full border rounded-md px-3 py-2 text-sm"
+          >
+            <option value="all">All Ages</option>
+            {ageOrder.map(age => <option key={age} value={age}>{age}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Mileage Filter</label>
+          <select 
+            value={selectedMileage} 
+            onChange={(e) => setSelectedMileage(e.target.value)}
+            className="w-full border rounded-md px-3 py-2 text-sm"
+          >
+            <option value="all">All Mileages</option>
+            {mileageOrder.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Metric</label>
+          <select 
+            value={metric} 
+            onChange={(e) => setMetric(e.target.value)}
+            className="w-full border rounded-md px-3 py-2 text-sm"
+          >
+            {metricOptions.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-4">
+        <h3 className="text-lg font-semibold mb-4">{selectedMetric.label} by Segment</h3>
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={aggregatedData} margin={{ top: 20, right: 30, left: 20, bottom: 100 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" angle={-45} textAnchor="end" interval={0} height={100} tick={{ fontSize: 11 }} />
+            <YAxis />
+            <Tooltip formatter={(value) => metric.includes('rate') ? `${(value * 100).toFixed(1)}%` : value.toFixed(2)} />
+            <Bar dataKey={metric} fill={COLORS[selectedMetric.color]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <h3 className="text-lg font-semibold p-4 border-b">Detailed Data</h3>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-2 text-left">Segment</th>
+                <th className="px-4 py-2 text-right">Inspections</th>
+                <th className="px-4 py-2 text-right">Issues Found</th>
+                <th className="px-4 py-2 text-right">Maint. Cond.</th>
+                <th className="px-4 py-2 text-right">Repair Cond.</th>
+                <th className="px-4 py-2 text-right">Images</th>
+                <th className="px-4 py-2 text-right">Edited %</th>
+                <th className="px-4 py-2 text-right">Rec w/ Image</th>
+              </tr>
+            </thead>
+            <tbody>
+              {aggregatedData.map((row, i) => (
+                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td className="px-4 py-2 font-medium">{row.name}</td>
+                  <td className="px-4 py-2 text-right">{row.inspection_count.toLocaleString()}</td>
+                  <td className="px-4 py-2 text-right">{row.avg_issues_found.toFixed(1)}</td>
+                  <td className="px-4 py-2 text-right">{row.avg_maintenance_conditions.toFixed(1)}</td>
+                  <td className="px-4 py-2 text-right">{row.avg_repair_conditions.toFixed(1)}</td>
+                  <td className="px-4 py-2 text-right">{row.avg_images.toFixed(1)}</td>
+                  <td className="px-4 py-2 text-right">{(row.rate_edited_images * 100).toFixed(1)}%</td>
+                  <td className="px-4 py-2 text-right">{(row.rate_recommendations_with_image * 100).toFixed(1)}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Benchmarks Component
+const Benchmarks = ({ data }) => {
+  const [viewMode, setViewMode] = useState('matrix');
+
+  const overallStats = useMemo(() => {
+    const totalInspections = data.reduce((sum, d) => sum + d.inspection_count, 0);
+    const weighted = (key) => data.reduce((sum, d) => sum + d[key] * d.inspection_count, 0) / totalInspections;
+    
+    return {
+      totalInspections,
+      avg_issues_found: weighted('avg_issues_found'),
+      avg_maintenance_conditions: weighted('avg_maintenance_conditions'),
+      avg_repair_conditions: weighted('avg_repair_conditions'),
+      avg_images: weighted('avg_images'),
+      avg_edited_images: weighted('avg_edited_images'),
+      rate_edited_images: weighted('rate_edited_images'),
+      rate_recommendations_with_image: weighted('rate_recommendations_with_image')
+    };
+  }, [data]);
+
+  const matrixData = useMemo(() => {
+    return ageOrder.map(age => {
+      const row = { age };
+      mileageOrder.forEach(mileage => {
+        const item = data.find(d => d.vehicle_age_range === age && d.mileage_range === mileage);
+        row[mileage] = item || null;
+      });
+      return row;
+    });
+  }, [data]);
+
+  const getColor = (value, metric) => {
+    const thresholds = {
+      avg_issues_found: { low: 6, mid: 10, high: 13 },
+      avg_maintenance_conditions: { low: 4, mid: 6, high: 8 },
+      avg_repair_conditions: { low: 4, mid: 7, high: 10 },
+      avg_images: { low: 28, mid: 33, high: 38 },
+      rate_recommendations_with_image: { low: 0.75, mid: 0.80, high: 0.85 }
+    };
+    const t = thresholds[metric];
+    if (!t) return 'bg-gray-100';
+    if (metric === 'avg_images' || metric === 'rate_recommendations_with_image') {
+      if (value >= t.high) return 'bg-green-200';
+      if (value >= t.mid) return 'bg-yellow-100';
+      return 'bg-red-100';
+    } else {
+      if (value <= t.low) return 'bg-green-200';
+      if (value <= t.mid) return 'bg-yellow-100';
+      return 'bg-red-100';
+    }
+  };
+
+  const recommendations = useMemo(() => {
+    return data.map(d => {
+      // Calculate expected ranges based on segment
+      const ageIndex = ageOrder.indexOf(d.vehicle_age_range);
+      const mileageIndex = mileageOrder.indexOf(d.mileage_range);
+      const riskLevel = (ageIndex + mileageIndex) / 6; // 0-1 scale
+      
+      return {
+        ...d,
+        risk_level: riskLevel,
+        expected_issues_min: Math.round(4 + riskLevel * 8),
+        expected_issues_max: Math.round(8 + riskLevel * 8),
+        expected_maint_min: Math.round(2 + riskLevel * 4),
+        expected_maint_max: Math.round(4 + riskLevel * 5),
+        expected_repair_min: Math.round(1 + riskLevel * 5),
+        expected_repair_max: Math.round(4 + riskLevel * 7),
+        min_images: Math.round(25 + riskLevel * 8),
+        target_images: Math.round(30 + riskLevel * 10),
+        min_rec_with_image: 0.75,
+        target_rec_with_image: 0.85
+      };
+    });
+  }, [data]);
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <p className="text-green-800 text-sm">
+          <strong>📈 Benchmarks & Recommendations:</strong> Based on {overallStats.totalInspections.toLocaleString()} Ramsey inspections, 
+          these benchmarks help define "good" vs "needs improvement" thresholds by vehicle segment.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <MetricCard title="Avg Issues Found" value={overallStats.avg_issues_found.toFixed(1)} subtitle="per inspection" color="danger" />
+        <MetricCard title="Avg Images" value={overallStats.avg_images.toFixed(1)} subtitle="per inspection" color="primary" />
+        <MetricCard title="Rec w/ Image Rate" value={`${(overallStats.rate_recommendations_with_image * 100).toFixed(1)}%`} subtitle="target: 80%+" color="secondary" />
+        <MetricCard title="Edited Image Rate" value={`${(overallStats.rate_edited_images * 100).toFixed(1)}%`} subtitle="current baseline" color="purple" />
+      </div>
+
+      <div className="flex gap-2 mb-4">
+        <button 
+          onClick={() => setViewMode('matrix')} 
+          className={`px-4 py-2 rounded text-sm ${viewMode === 'matrix' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+        >
+          Heat Map Matrix
+        </button>
+        <button 
+          onClick={() => setViewMode('thresholds')} 
+          className={`px-4 py-2 rounded text-sm ${viewMode === 'thresholds' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+        >
+          Suggested Thresholds
+        </button>
+      </div>
+
+      {viewMode === 'matrix' && (
+        <div className="space-y-6">
+          {['avg_issues_found', 'avg_images', 'rate_recommendations_with_image'].map(metric => (
+            <div key={metric} className="bg-white rounded-lg shadow p-4">
+              <h4 className="font-semibold mb-3 capitalize">{metric.replace(/_/g, ' ').replace('avg', 'Average').replace('rate', 'Rate:')}</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr>
+                      <th className="p-2 text-left bg-gray-100">Age / Mileage</th>
+                      {mileageOrder.map(m => <th key={m} className="p-2 text-center bg-gray-100">{m}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {matrixData.map(row => (
+                      <tr key={row.age}>
+                        <td className="p-2 font-medium bg-gray-50">{row.age}</td>
+                        {mileageOrder.map(m => {
+                          const item = row[m];
+                          const value = item ? item[metric] : null;
+                          return (
+                            <td key={m} className={`p-2 text-center ${item ? getColor(value, metric) : 'bg-gray-100'}`}>
+                              {value !== null ? (
+                                metric.includes('rate') ? `${(value * 100).toFixed(0)}%` : value.toFixed(1)
+                              ) : '-'}
+                              {item && <div className="text-xs text-gray-500">(n={item.inspection_count})</div>}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex gap-4 mt-2 text-xs">
+                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-green-200 rounded"></span> Good</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-yellow-100 rounded"></span> Acceptable</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-red-100 rounded"></span> Needs Improvement</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {viewMode === 'thresholds' && (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <h3 className="text-lg font-semibold p-4 border-b">Suggested Thresholds by Segment</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-3 py-2 text-left">Vehicle Age</th>
+                  <th className="px-3 py-2 text-left">Mileage</th>
+                  <th className="px-3 py-2 text-center">Expected Issues</th>
+                  <th className="px-3 py-2 text-center">Expected Maint.</th>
+                  <th className="px-3 py-2 text-center">Expected Repair</th>
+                  <th className="px-3 py-2 text-center">Min Images</th>
+                  <th className="px-3 py-2 text-center">Target Images</th>
+                  <th className="px-3 py-2 text-center">Min Rec w/ Img</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recommendations.sort((a, b) => a.risk_level - b.risk_level).map((row, i) => (
+                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-3 py-2 font-medium">{row.vehicle_age_range}</td>
+                    <td className="px-3 py-2">{row.mileage_range}</td>
+                    <td className="px-3 py-2 text-center">{row.expected_issues_min}-{row.expected_issues_max}</td>
+                    <td className="px-3 py-2 text-center">{row.expected_maint_min}-{row.expected_maint_max}</td>
+                    <td className="px-3 py-2 text-center">{row.expected_repair_min}-{row.expected_repair_max}</td>
+                    <td className="px-3 py-2 text-center font-semibold text-blue-600">{row.min_images}</td>
+                    <td className="px-3 py-2 text-center font-semibold text-green-600">{row.target_images}</td>
+                    <td className="px-3 py-2 text-center">{(row.min_rec_with_image * 100).toFixed(0)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="p-4 bg-yellow-50 border-t text-sm text-yellow-800">
+            <strong>💡 Key Insight:</strong> Older vehicles with higher mileage should have MORE issues found, not fewer. 
+            An inspection on a 10+ year vehicle with 150K+ miles showing only 5 issues may indicate incomplete inspection.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Scoring Simulator Component
+const ScoringSimulator = ({ data }) => {
+  const [weights, setWeights] = useState({
+    issues_found: 20,
+    maintenance_conditions: 15,
+    repair_conditions: 15,
+    images: 25,
+    recommendations_with_image: 25
+  });
+
+  const [thresholds, setThresholds] = useState({
+    excellent: 85,
+    good: 70,
+    needsImprovement: 50
+  });
+
+  const updateWeight = (key, value) => {
+    setWeights(prev => ({ ...prev, [key]: parseInt(value) || 0 }));
+  };
+
+  const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
+
+  const scoredData = useMemo(() => {
+    return data.map(d => {
+      const ageIndex = ageOrder.indexOf(d.vehicle_age_range);
+      const mileageIndex = mileageOrder.indexOf(d.mileage_range);
+      const riskLevel = (ageIndex + mileageIndex) / 6;
+
+      // Expected values based on segment
+      const expectedIssues = 4 + riskLevel * 10;
+      const expectedMaint = 2 + riskLevel * 5;
+      const expectedRepair = 1 + riskLevel * 6;
+      const minImages = 25 + riskLevel * 10;
+      const targetRecWithImage = 0.80;
+
+      // Score components (0-100 each)
+      const issuesScore = Math.min(100, (d.avg_issues_found / expectedIssues) * 100);
+      const maintScore = Math.min(100, (d.avg_maintenance_conditions / expectedMaint) * 100);
+      const repairScore = Math.min(100, (d.avg_repair_conditions / expectedRepair) * 100);
+      const imagesScore = Math.min(100, (d.avg_images / minImages) * 100);
+      const recImageScore = Math.min(100, (d.rate_recommendations_with_image / targetRecWithImage) * 100);
+
+      // Weighted total
+      const normalizedWeights = {
+        issues_found: weights.issues_found / totalWeight,
+        maintenance_conditions: weights.maintenance_conditions / totalWeight,
+        repair_conditions: weights.repair_conditions / totalWeight,
+        images: weights.images / totalWeight,
+        recommendations_with_image: weights.recommendations_with_image / totalWeight
+      };
+
+      const totalScore = 
+        issuesScore * normalizedWeights.issues_found +
+        maintScore * normalizedWeights.maintenance_conditions +
+        repairScore * normalizedWeights.repair_conditions +
+        imagesScore * normalizedWeights.images +
+        recImageScore * normalizedWeights.recommendations_with_image;
+
+      return {
+        ...d,
+        score: Math.round(totalScore),
+        issuesScore: Math.round(issuesScore),
+        maintScore: Math.round(maintScore),
+        repairScore: Math.round(repairScore),
+        imagesScore: Math.round(imagesScore),
+        recImageScore: Math.round(recImageScore),
+        grade: totalScore >= thresholds.excellent ? 'Excellent' : 
+               totalScore >= thresholds.good ? 'Good' : 
+               totalScore >= thresholds.needsImprovement ? 'Needs Improvement' : 'Poor'
+      };
+    });
+  }, [data, weights, totalWeight, thresholds]);
+
+  const scoreDistribution = useMemo(() => {
+    const dist = { Excellent: 0, Good: 0, 'Needs Improvement': 0, Poor: 0 };
+    let totalInspections = 0;
+    scoredData.forEach(d => {
+      dist[d.grade] += d.inspection_count;
+      totalInspections += d.inspection_count;
+    });
+    return Object.entries(dist).map(([name, count]) => ({
+      name,
+      count,
+      percentage: ((count / totalInspections) * 100).toFixed(1)
+    }));
+  }, [scoredData]);
+
+  const gradeColors = {
+    'Excellent': '#10b981',
+    'Good': '#3b82f6',
+    'Needs Improvement': '#f59e0b',
+    'Poor': '#ef4444'
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <p className="text-purple-800 text-sm">
+          <strong>🎯 Scoring Simulator:</strong> Adjust the weights below to see how different scoring models 
+          would grade the Ramsey shop inspections. This helps determine the optimal scoring configuration.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg shadow p-4">
+          <h3 className="text-lg font-semibold mb-4">Scoring Weights</h3>
+          <div className="space-y-4">
+            {[
+              { key: 'issues_found', label: '# of Recommendations Found', desc: 'Issues identified during inspection' },
+              { key: 'maintenance_conditions', label: '# of Maintenance Conditions', desc: 'Time/mileage-based services' },
+              { key: 'repair_conditions', label: '# of Repair Conditions', desc: 'Condition-based repairs needed' },
+              { key: 'images', label: '# of Images Taken', desc: 'Photo documentation' },
+              { key: 'recommendations_with_image', label: 'Recommendations w/ Images %', desc: 'Photo support for findings' }
+            ].map(({ key, label, desc }) => (
+              <div key={key} className="flex items-center gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium">{label}</label>
+                  <span className="text-xs text-gray-500">{desc}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="50"
+                  value={weights[key]}
+                  onChange={(e) => updateWeight(key, e.target.value)}
+                  className="w-32"
+                />
+                <span className="w-12 text-right font-mono text-sm">{weights[key]}%</span>
+              </div>
+            ))}
+          </div>
+          <div className={`mt-4 p-2 rounded text-sm ${totalWeight === 100 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+            Total Weight: {totalWeight}% {totalWeight !== 100 && '(will be normalized to 100%)'}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-4">
+          <h3 className="text-lg font-semibold mb-4">Grade Thresholds</h3>
+          <div className="space-y-4">
+            {[
+              { key: 'excellent', label: 'Excellent', color: 'green' },
+              { key: 'good', label: 'Good', color: 'blue' },
+              { key: 'needsImprovement', label: 'Needs Improvement', color: 'yellow' }
+            ].map(({ key, label, color }) => (
+              <div key={key} className="flex items-center gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium">{label}</label>
+                  <span className="text-xs text-gray-500">Score ≥ {thresholds[key]}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={thresholds[key]}
+                  onChange={(e) => setThresholds(prev => ({ ...prev, [key]: parseInt(e.target.value) }))}
+                  className="w-32"
+                />
+                <span className="w-12 text-right font-mono text-sm">{thresholds[key]}</span>
+              </div>
+            ))}
+            <div className="text-sm text-gray-500 mt-2">
+              <span className="text-red-500 font-medium">Poor:</span> Score &lt; {thresholds.needsImprovement}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg shadow p-4">
+          <h3 className="text-lg font-semibold mb-4">Score Distribution (by Inspection Count)</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={scoreDistribution}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip formatter={(value, name) => name === 'count' ? value.toLocaleString() : `${value}%`} />
+              <Bar dataKey="count" name="Inspections">
+                {scoreDistribution.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={gradeColors[entry.name]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+          <div className="flex justify-center gap-4 mt-2 text-sm">
+            {scoreDistribution.map(({ name, percentage }) => (
+              <span key={name} className="flex items-center gap-1">
+                <span className="w-3 h-3 rounded" style={{ backgroundColor: gradeColors[name] }}></span>
+                {name}: {percentage}%
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-4">
+          <h3 className="text-lg font-semibold mb-4">Scores by Segment</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={scoredData.sort((a, b) => a.score - b.score)} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" domain={[0, 100]} />
+              <YAxis dataKey={(d) => `${d.vehicle_age_range.slice(0,5)}/${d.mileage_range}`} type="category" width={80} tick={{ fontSize: 10 }} />
+              <Tooltip 
+                formatter={(value) => value}
+                labelFormatter={(label) => `Segment: ${label}`}
+              />
+              <Bar dataKey="score" name="Score">
+                {scoredData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={gradeColors[entry.grade]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <h3 className="text-lg font-semibold p-4 border-b">Detailed Score Breakdown</h3>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-3 py-2 text-left">Segment</th>
+                <th className="px-3 py-2 text-center">Count</th>
+                <th className="px-3 py-2 text-center">Issues</th>
+                <th className="px-3 py-2 text-center">Maint.</th>
+                <th className="px-3 py-2 text-center">Repair</th>
+                <th className="px-3 py-2 text-center">Images</th>
+                <th className="px-3 py-2 text-center">Rec w/Img</th>
+                <th className="px-3 py-2 text-center font-bold">Total</th>
+                <th className="px-3 py-2 text-center">Grade</th>
+              </tr>
+            </thead>
+            <tbody>
+              {scoredData.sort((a, b) => b.score - a.score).map((row, i) => (
+                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td className="px-3 py-2 font-medium">{row.vehicle_age_range} / {row.mileage_range}</td>
+                  <td className="px-3 py-2 text-center text-gray-500">{row.inspection_count.toLocaleString()}</td>
+                  <td className="px-3 py-2 text-center">{row.issuesScore}</td>
+                  <td className="px-3 py-2 text-center">{row.maintScore}</td>
+                  <td className="px-3 py-2 text-center">{row.repairScore}</td>
+                  <td className="px-3 py-2 text-center">{row.imagesScore}</td>
+                  <td className="px-3 py-2 text-center">{row.recImageScore}</td>
+                  <td className="px-3 py-2 text-center font-bold">{row.score}</td>
+                  <td className="px-3 py-2 text-center">
+                    <span className="px-2 py-1 rounded text-xs text-white" style={{ backgroundColor: gradeColors[row.grade] }}>
+                      {row.grade}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Main App
+export default function InspectionScoringApp() {
+  const [activeTab, setActiveTab] = useState('explorer');
+
+  const tabs = [
+    { id: 'explorer', label: '📊 Data Explorer' },
+    { id: 'benchmarks', label: '📈 Benchmarks' },
+    { id: 'simulator', label: '🎯 Scoring Simulator' }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">Inspection Scoring Analysis</h1>
+          <p className="text-gray-600 mt-1">AutoVitals DVI Metrics - Ramsey Shops Data</p>
+          <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-sm">
+            ⚠️ This analysis is based on Ramsey shops data only (22,999 inspections over 12 months)
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <Tabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
+          
+          {activeTab === 'explorer' && <DataExplorer data={rawData} />}
+          {activeTab === 'benchmarks' && <Benchmarks data={rawData} />}
+          {activeTab === 'simulator' && <ScoringSimulator data={rawData} />}
+        </div>
+
+        <div className="mt-6 bg-gray-800 rounded-lg p-4 text-gray-300 text-sm">
+          <h4 className="font-semibold text-white mb-2">📋 Methodology Notes</h4>
+          <ul className="space-y-1 text-xs">
+            <li>• <strong>Maintenance Conditions:</strong> Time/mileage-based services (oil, filters, fluid exchanges, factory schedules)</li>
+            <li>• <strong>Repair Conditions:</strong> Condition-based issues (leaks, wear, damage, broken parts, low measurements)</li>
+            <li>• <strong>Topic Completion Rate:</strong> Nearly 100% across all segments (inspections are thorough)</li>
+            <li>• <strong>Scoring is segment-aware:</strong> Older/higher-mileage vehicles are expected to have MORE findings</li>
+            <li>• <strong>Data Source:</strong> avdbprod.dbo tables - VEISInspectionResult, EISTopicResult, EISTopicResultCondition</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
